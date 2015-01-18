@@ -7,7 +7,7 @@ import java.net.*;
  * Unique ID and payload containing secret code
  * */
 
-class Assignment1UDP {
+class A1Client {
 	
 	public static final boolean DEV_MODE = false;
 	public static final int HDR_SIZE = 16;

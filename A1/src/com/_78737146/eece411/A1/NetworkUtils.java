@@ -68,7 +68,7 @@ public class NetworkUtils {
 		ByteOrder.writeBytes(System.currentTimeMillis(),packet,hdrPacket,8);
 		hdrPacket+=8;
 		
-		if(Assignment1UDP.DEV_MODE){
+		if(A1Client.DEV_MODE){
 			 InetAddress hostIPAddress;
 			try {
 				hostIPAddress = InetAddress.getByAddress(hostIP);
@@ -133,12 +133,12 @@ public class NetworkUtils {
 				clientSocket.receive(receivePacket);
 			}
 			catch(IOException e){
-				if(Assignment1UDP.DEV_MODE){
+				if(A1Client.DEV_MODE){
 					System.err.println("Server not responding. Retrying(" + retryCnt +")...");
 				}
 			}
-			replyPacket = StringUtils.byteArrayToHexString(receivePacket.getData(),Assignment1UDP.HDR_SIZE);
-			if(Assignment1UDP.DEV_MODE){
+			replyPacket = StringUtils.byteArrayToHexString(receivePacket.getData(),A1Client.HDR_SIZE);
+			if(A1Client.DEV_MODE){
 				System.out.println("Packet is: ");
 				System.out.println(StringUtils.byteArrayToHexString(packet,lengthPacket));
 				System.out.println("Reply is:");
@@ -146,7 +146,7 @@ public class NetworkUtils {
 			}
 			
 			/*---------------------Match Unique ID------------------------*/
-			matchReqRep = replyPacket.equals(StringUtils.byteArrayToHexString(packet,Assignment1UDP.HDR_SIZE));
+			matchReqRep = replyPacket.equals(StringUtils.byteArrayToHexString(packet,A1Client.HDR_SIZE));
 			retryCnt++;			
 		}while(matchReqRep==false && retryCnt<4);
 
