@@ -3,14 +3,24 @@ package com._78737146.eece411.A1;
 import java.net.*;
 import java.util.*;
 
+/* UDP Client for new student ID code
+ * Program creates data packet for UDP transmission using unique ID and checks reply for
+ * Unique ID and payload containing secret code
+ * */
+
 class Assignment1UDP {
+	
+	public static final boolean DEV_MODE = false;
+	public static final int HDR_SIZE = 16;
+	//import static Assignment1UDP.DEV_MODE;
+	
 	public static void main(String args[]) throws Exception {		
-		/* Parse and assign args
-		 * java Assignment1UDP <ip.string.of.server> <port_num> <ID>
+		/* Parse and assign arguments
+		 * i.e. java Assignment1UDP ip_address port student_ID [retry_timeout_ms]
 		 * */
 				
 		InetAddress IPAddress = InetAddress.getByName("127.0.0.0");
-		short port = 9876;
+		short port = 5627;
 		int studentID = 909090;
 		int timeOutms = 100;
 		
@@ -18,7 +28,7 @@ class Assignment1UDP {
 			try {
 
 				IPAddress = InetAddress.getByName(args[0]);
-				port = Short.parseShort(args[1]); //9876 , 5627
+				port = Short.parseShort(args[1]);
 				studentID = Integer.parseInt(args[2]);
 			
 			}catch (UnknownHostException | NumberFormatException e) {
@@ -28,8 +38,7 @@ class Assignment1UDP {
 			}
 		}
 		else{
-			System.err.println("Arguments missing");
-			System.exit(1);
+			System.err.println("Using Default Arguments: 127.0.0.0 9867 909090");
 		}
 		
 		if (args.length==4){
@@ -42,21 +51,12 @@ class Assignment1UDP {
 				System.exit(1);
 			}
 		}
-		
-		
-		System.out.println(args.length);
-		System.out.println(IPAddress.toString()); //DEBUG
-		System.out.println("Sending ID: " + studentID);
-					
-		
-		/* FILL-IN UDP PACKET
-		 * 
+	
+		/* Fill-in UDP Packet
 		 * Unique ID[16]: |hostIP3|...|hostIP0|Port1|Port0|Rand1|Rand0|miliSec7|...|miliSec0|
-		 * 
 		 * Little-Endian
 		 * 		1001			1000
-		 * MSB		LSB		MSB		LSB
-		 * 
+		 * MSB		LSB		MSB		LSB 
 		*/
 	
 		byte[] packetUDP = new byte[1024];
@@ -79,47 +79,69 @@ class Assignment1UDP {
 		writeBytes(System.currentTimeMillis(),packetUDP,hdrPacket,8);
 		hdrPacket+=8;
 		
-		/* ----Test Host IP Address
-		 * InetAddress hostIPAddress = InetAddress.getByAddress(hostIP);
-		 * System.out.println(hostIPAddress.toString());
+		/* DEV: Test Host IP Address
 		 */
+		if(DEV_MODE){
+			 InetAddress hostIPAddress = InetAddress.getByAddress(hostIP);
+			 System.out.println(hostIPAddress.toString());
+		}
 		
 		/* Add Payload
-		 * 
+		 * Add integer (4 bytes) payload 
 		 * */
 		
 		writeBytes(studentID,packetUDP,hdrPacket,4);
 		hdrPacket+=4;
-
-		System.out.println("Header of Packet " + hdrPacket);
-		
-		System.out.println("Packet is: ");
-		System.out.println(StringUtils.byteArrayToHexString(packetUDP,hdrPacket));
-		
-		
+			
 		DatagramSocket clientSocket = new DatagramSocket();
+		byte[] receiveData = new byte[1024];
+		DatagramPacket receivePacket = new DatagramPacket(receiveData,receiveData.length);
+		String replyPacket;
 		boolean matchReqRep = false;
 		int retryCnt = 0;
+		System.out.println("Sending ID: " + studentID);
 		do{
 			/*-------------------------Send-------------------------------*/
 			DatagramPacket sendPacket = new DatagramPacket(packetUDP,hdrPacket, IPAddress, port);
 			clientSocket.send(sendPacket);
 			
 			/*------------------------Receive-----------------------------*/
-			byte[] receiveData = new byte[1024];
-			DatagramPacket receivePacket = new DatagramPacket(receiveData,receiveData.length);
 			clientSocket.setSoTimeout(timeOutms);
-			clientSocket.receive(receivePacket);
-			String replyPacket = StringUtils.byteArrayToHexString(receivePacket.getData(),hdrPacket+32);
-			System.out.println("FROM SERVER:"); //DEBUG
-			System.out.println(replyPacket); //DEBUG
+			try{
+				clientSocket.receive(receivePacket);
+			}
+			catch(SocketTimeoutException e){
+				if(DEV_MODE){
+					System.err.println("Server not responding. Retrying(" + retryCnt +")...");
+				}
+			}
+			replyPacket = StringUtils.byteArrayToHexString(receivePacket.getData(),hdrPacket+32);
+			if(DEV_MODE){
+				System.out.println("Packet is: ");
+				System.out.println(StringUtils.byteArrayToHexString(packetUDP,hdrPacket));
+				System.out.println("Reply is:");
+				System.out.println(replyPacket);
+			}
 			
-			/*-------------------------Match-----------------------------*/
-			matchReqRep = replyPacket.startsWith(StringUtils.byteArrayToHexString(packetUDP,16));
-			retryCnt++;
-		}while(matchReqRep==false && retryCnt<3);
-				
+			/*---------------------Match Unique ID------------------------*/
+			matchReqRep = replyPacket.startsWith(StringUtils.byteArrayToHexString(packetUDP,HDR_SIZE));
+			retryCnt++;			
+		}while(matchReqRep==false && retryCnt<4);
+
 		clientSocket.close();
+		
+		if (matchReqRep){
+			
+			//readInt();
+			
+			int codeLength = ByteOrder.leb2int(receivePacket.getData(), HDR_SIZE);
+						
+			System.out.println("Secret code length: " + codeLength);		
+			System.out.println("Secret: " + replyPacket.substring((HDR_SIZE+4)*2, (HDR_SIZE+4)*2+(codeLength*2)));
+		}
+		else{
+			System.out.println("Server not responding");
+		}
 		
 		//return matchReqRep;
 	}
@@ -129,11 +151,14 @@ class Assignment1UDP {
 			packet[hdrPacket++] = (byte)(dataIn>>(8*i));
         }		
 	}
-	
+			
 	/** 
-	 * @return the IP address of the device.
-	 * From project Android-Activity-Tracker
-	 */
+     * Read list of Network Interfaces and return device IPv4
+     * From project Android-Activity-Tracker.
+     * 
+     * @return the IP address of the device. 
+     */
+	
 	public static InetAddress getHostIP(){
 	  try {
 	    for (Enumeration<NetworkInterface> en=NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
