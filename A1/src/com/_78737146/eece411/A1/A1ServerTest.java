@@ -7,7 +7,7 @@ import java.net.*;
  * Server never closes, testing only.
  * */
 
-class Assignment1UDPServer {
+class A1ServerTest {
 	public static void main(String args[]) throws Exception {
 		DatagramSocket serverSocket = new DatagramSocket(5627);
 		byte[] receiveData = new byte[1024];
