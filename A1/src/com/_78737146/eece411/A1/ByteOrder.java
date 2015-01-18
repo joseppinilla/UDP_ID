@@ -126,6 +126,23 @@ public class ByteOrder {
         os.write((byte)((x>>24) & 0x000000FF));
     }
 
+    
+    /** 
+     * Integer/Long to Bytes
+     * Specify number of bytes in input variable to convert to bytes
+     * 
+     * @param dataIN Char, Integer or Long variable
+     * @param packet byte array as output packet
+     * @param hdrPacket header of the packet being written, or offset.
+     * @param bytes number of bytes in input variable Integer(2), Long(4)
+     */
+	public static void writeBytes(long dataIn, byte packet[], int hdrPacket, int bytes){	
+		for(char i=0; i<bytes; i++){
+			packet[hdrPacket++] = (byte)(dataIn>>(8*i));
+        }		
+	}
+    
+    
    /**
      * Interprets the value of x as an unsigned byte, and returns 
      * it as integer.  For example, ubyte2int(0xFF)==255, not -1.
