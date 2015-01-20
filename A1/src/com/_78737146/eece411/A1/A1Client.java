@@ -14,7 +14,7 @@ class A1Client {
 	
 	public static void main(String args[]) throws Exception {		
 		/* Parse and assign arguments
-		 * i.e. java A1Client ip_address port student_ID [retry_timeout_ms]
+		 * i.e. java Assignment1UDP ip_address port student_ID [retry_timeout_ms]
 		 * */
 				
 		InetAddress serverIP = InetAddress.getByName("127.0.0.0");
@@ -29,7 +29,7 @@ class A1Client {
 				studentID = Integer.parseInt(args[2]);		
 			}catch (UnknownHostException | NumberFormatException e) {
 				System.err.println("Arguments not valid");
-				System.err.println("Usage syntax: A1Client ip_address port student_ID [retry_timeout_ms]");
+				System.err.println("Usage syntax: Assignment1UDP ip_address port student_ID [retry_timeout_ms]");
 				System.exit(1);
 			}
 		}
@@ -43,7 +43,7 @@ class A1Client {
 			}
 			catch (NumberFormatException e) {
 				System.err.println("Timeout value not valid");
-				System.err.println("Usage syntax: A1Client ip_address port student_ID [retry_timeout_ms]");
+				System.err.println("Usage syntax: Assignment1UDP ip_address port student_ID [retry_timeout_ms]");
 				System.exit(1);
 			}
 		}
