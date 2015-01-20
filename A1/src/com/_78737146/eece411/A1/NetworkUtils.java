@@ -134,6 +134,7 @@ public class NetworkUtils {
 			
 			try{
 				clientSocket.receive(receivePacket);
+
 			} catch(IOException e){
 				if(A1Client.DEV_MODE){
 					System.err.println("Server not responding. Retrying(" + retryCnt +")...");
